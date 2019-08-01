@@ -1,9 +1,4 @@
 import warnings
-
-from keras_retinanet.utils.image import compute_resize_scale
-
-warnings.simplefilter("ignore")
-
 import csv
 import argparse
 import sys
@@ -16,6 +11,9 @@ from compute_overlap import compute_overlap
 
 from keras_retinanet.preprocessing.csv_generator import _open_for_csv
 from keras_retinanet.utils.anchors import generate_anchors, AnchorParameters, anchors_for_shape
+from keras_retinanet.utils.image import compute_resize_scale
+
+warnings.simplefilter("ignore")
 
 SIZES = [32, 64, 128, 256, 512]
 STRIDES = [8, 16, 32, 64, 128]
