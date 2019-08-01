@@ -80,7 +80,10 @@ def average_overlap(values, entries, state, image_shape, mode='focal', ratio_cou
         print('Current best anchor configuration')
         print(f'Ratios: {sorted(np.round(anchor_params.ratios, 3))}')
         print(f'Scales: {sorted(np.round(anchor_params.scales, 3))}')
-        print(f'Average overlap: {np.round(np.average(max_overlap), 3)}')
+
+        if include_stride:
+            print(f'Average overlap: {np.round(np.average(max_overlap), 3)}')
+
         print(f'Number of labels that don\'t have any matching anchor: {not_matched}')
         print()
 
