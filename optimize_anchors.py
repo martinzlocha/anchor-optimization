@@ -149,7 +149,7 @@ if __name__ == "__main__":
                 entry = np.expand_dims(np.array([-width / 2, -height / 2, width / 2, height / 2]), axis=0)
                 entries = np.append(entries, entry, axis=0)
 
-    image_shape = [max_x, max_y]
+    image_shape = [max_y, max_x]
 
     print('Optimising anchors.')
 
