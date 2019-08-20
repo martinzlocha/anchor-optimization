@@ -183,5 +183,8 @@ if __name__ == "__main__":
     print('Final best anchor configuration')
     print(f'Ratios: {sorted(np.round(anchor_params.ratios, 3))}')
     print(f'Scales: {sorted(np.round(anchor_params.scales, 3))}')
-    print(f'Average overlap: {1 - avg}')
+    
+    if args.include_stride:
+        print(f'Average overlap: {np.round(1 - avg, 3)}')
+
     print(f'Number of labels that don\'t have any matching anchor: {not_matched}')
