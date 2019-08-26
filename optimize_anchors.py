@@ -134,7 +134,10 @@ if __name__ == "__main__":
 
             if args.resize:
                 img = Image.open(row[0])
-                scale = compute_resize_scale(img.shape, min_side=args.image_min_side, max_side=args.image_max_side)
+                try:
+                    scale = compute_resize_scale(img.shape, min_side=args.image_min_side, max_side=args.image_max_side)
+                except AttributeError:
+                    scale = compute_resize_scale((img.size[0], img.size[1], 3), min_side=args.image_min_side, max_side=args.image_max_side)
                 x1, y1, x2, y2 = list(map(lambda x: int(x) * scale, row[1:5]))
 
             max_x = max(x2, max_x)
