@@ -2,6 +2,7 @@ import warnings
 import csv
 import argparse
 import sys
+import os
 
 import numpy as np
 import scipy.optimize
@@ -133,7 +134,11 @@ if __name__ == "__main__":
                 continue
 
             if args.resize:
-                img = Image.open(row[0])
+                #Concat base path from annotations file follow retinanet
+                base_dir = os.path.split(args.annotations)[0]
+                relative_path = row[0]
+                image_path = os.path.join(base_dir,relative_path)
+                img = Image.open(image_path)
 
                 if hasattr(img, "shape"):
                     image_shape = img.shape
