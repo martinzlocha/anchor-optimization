@@ -25,7 +25,7 @@ Additional options:
 - `popsize` parameter allows you to specify the population multiplier used by differential evolution. Higher values result in better results however the computation will also be slower.
 - By default the images and the detected objects are resized using the same method as in keras-retinanet implementation. If you do not wish to resize the image use the `no-resize` flag or specify different `image-min-side` and `image-max-side`.
 - By default we ignore strides when optimizing the anchor configuration, this makes it feasible to optimize the anchors for a large number of objects in a short time. We have recently added an `include-stride` flag. This makes the computation much slower however it is more accurate. We suggest you only use it if your dataset is small.
-- `threads` to allow parallelization
+- `threads` to allow parallelization.
 
 To reproduce our results:
 
