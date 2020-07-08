@@ -36,8 +36,8 @@ class BuildExtension(setuptools.Command):
 
 extensions = [
     Extension(
-        'compute_overlap',
-        ['compute_overlap.pyx']
+        'anchor_optimization.utils.compute_overlap',
+        ['anchor_optimization/utils/compute_overlap.pyx']
     ),
 ]
 
@@ -52,7 +52,12 @@ setuptools.setup(
     maintainer_email='zlocha.martin@gmail.com',
     cmdclass={'build_ext': BuildExtension},
     packages=setuptools.find_packages(),
-    install_requires=['keras_retinanet==0.5.1', 'numpy', 'scipy', 'cython', 'tensorflow'],
+    install_requires=['keras_retinanet==0.5.1', 'numpy', 'scipy>=1.2.0', 'cython', 'tensorflow'],
+    entry_points = {
+        'console_scripts': [
+            'anchor-optim=anchor_optimization.optimize_anchors_argparse:main',
+        ],
+    },
     ext_modules=extensions,
     setup_requires=["cython>=0.28", "numpy>=1.14.0"]
 )
