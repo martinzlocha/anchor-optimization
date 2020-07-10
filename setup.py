@@ -52,8 +52,13 @@ setuptools.setup(
     maintainer_email='zlocha.martin@gmail.com',
     cmdclass={'build_ext': BuildExtension},
     packages=setuptools.find_packages(),
-    install_requires=['keras_retinanet==0.5.1', 'numpy', 'scipy>=1.2.0', 'cython', 'tensorflow'],
-    entry_points = {
+    install_requires=[
+        'keras_retinanet==0.5.1',
+        'numpy',
+        'scipy>=1.2.0',
+        'cython',
+        'tensorflow'],
+    entry_points={
         'console_scripts': [
             'anchor-optim=anchor_optimization.optimize_anchors_argparse:main',
         ],

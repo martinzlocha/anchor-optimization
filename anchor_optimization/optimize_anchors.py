@@ -2,7 +2,6 @@
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 # warnings.simplefilter("ignore")
-
 import csv
 import os
 import sys
@@ -10,22 +9,21 @@ import numpy as np
 import scipy.optimize
 from PIL import Image
 from .utils.compute_overlap import compute_overlap
-
 from keras_retinanet.preprocessing.csv_generator import _open_for_csv
 from keras_retinanet.utils.anchors import generate_anchors, AnchorParameters, anchors_for_shape
 from keras_retinanet.utils.image import compute_resize_scale
 
 
-global state                                    # global variable
+# global variable
+global state
 state = {'best_result': sys.maxsize}
 
 
-
-def calculate_config(values, 
+def calculate_config(values,
                      ratio_count,
-                     SIZES = [32, 64, 128, 256, 512],
-                     STRIDES = [8, 16, 32, 64, 128]):
-    
+                     SIZES=[32, 64, 128, 256, 512],
+                     STRIDES=[8, 16, 32, 64, 128]):
+
     split_point = int((ratio_count - 1) / 2)
 
     ratios = [1]
@@ -38,17 +36,17 @@ def calculate_config(values,
     return AnchorParameters(SIZES, STRIDES, ratios, scales)
 
 
-
-def base_anchors_for_shape(pyramid_levels=None, 
+def base_anchors_for_shape(pyramid_levels=None,
                            anchor_params=None):
-    
+
     if pyramid_levels is None:
         pyramid_levels = [3, 4, 5, 6, 7]
 
     if anchor_params is None:
         anchor_params = AnchorParameters.default
 
-    all_anchors = np.zeros((0, 4))                                        # compute anchors over all pyramid levels
+    # compute anchors over all pyramid levels
+    all_anchors = np.zeros((0, 4))
     for idx, p in enumerate(pyramid_levels):
         anchors = generate_anchors(
             base_size=anchor_params.sizes[idx],
@@ -60,24 +58,23 @@ def base_anchors_for_shape(pyramid_levels=None,
     return all_anchors
 
 
-
 def average_overlap(values,
-                    entries, 
-                    image_shape, 
-                    mode='focal', 
-                    ratio_count=3, 
+                    entries,
+                    image_shape,
+                    mode='focal',
+                    ratio_count=3,
                     include_stride=False,
-                    SIZES = [32, 64, 128, 256, 512],
-                    STRIDES = [8, 16, 32, 64, 128],
-                    verbose = False,
-                    set_state = None,
-                    to_tuple = False,
-                    threads = 1):
-    
-    anchor_params = calculate_config(values, 
+                    SIZES=[32, 64, 128, 256, 512],
+                    STRIDES=[8, 16, 32, 64, 128],
+                    verbose=False,
+                    set_state=None,
+                    to_tuple=False,
+                    threads=1):
+
+    anchor_params = calculate_config(values,
                                      ratio_count,
                                      SIZES,
-                                     STRIDES)    
+                                     STRIDES)
     if include_stride:
         anchors = anchors_for_shape(image_shape, anchor_params=anchor_params)
     else:
@@ -95,81 +92,100 @@ def average_overlap(values,
         result = np.average(-(1 - max_overlap) ** 2 * np.log(max_overlap))
     else:
         raise Exception('Invalid mode.')
-            
-    if set_state is not None:
-        state = set_state       
 
-    #--------------------------------------------------------------------------------------------------------------------------------
+    if set_state is not None:
+        state = set_state
+
+    # --------------------------------------------------------------------------------------------------------------------------------
     # "scipy.optimize.differential_evolution" utilizes multiprocessing but internally uses "multiprocessing.Pool" and not
-    # "multiprocessing.Process" which is required for sharing state between processes 
+    # "multiprocessing.Process" which is required for sharing state between processes
     # (see: https://docs.python.org/3/library/multiprocessing.html#sharing-state-between-processes)
     #
     # the "state" variable does not affect directly the "scipy.optimize.differential_evolution" process, therefore updates will be
     # printed out in case of improvement only if a single thread is used
-    #--------------------------------------------------------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------------------------------------------------------
 
     if threads == 1:
-                
+
         if result < state['best_result']:
             state['best_result'] = result
-    
+
             if verbose:
                 print('Current best anchor configuration')
                 print('State: {}'.format(np.round(state['best_result'], 5)))
-                print('Ratios: {}'.format(sorted(np.round(anchor_params.ratios, 3))))
-                print('Scales: {}'.format(sorted(np.round(anchor_params.scales, 3))))
-    
+                print(
+                    'Ratios: {}'.format(
+                        sorted(
+                            np.round(
+                                anchor_params.ratios,
+                                3))))
+                print(
+                    'Scales: {}'.format(
+                        sorted(
+                            np.round(
+                                anchor_params.scales,
+                                3))))
+
             if include_stride:
                 if verbose:
-                    print('Average overlap: {}'.format(np.round(np.average(max_overlap), 3)))
-    
+                    print(
+                        'Average overlap: {}'.format(
+                            np.round(
+                                np.average(max_overlap),
+                                3)))
+
             if verbose:
-                print("Number of labels that don't have any matching anchor: {}".format(not_matched))
+                print(
+                    "Number of labels that don't have any matching anchor: {}".format(not_matched))
                 print()
-         
-    if to_tuple:                            # return a tuple, which happens in the last call to the 'average_overlap' function
+
+    if to_tuple:
+        # return a tuple, which happens in the last call to the 'average_overlap' function
         return result, not_matched
     else:
         return result
 
 
-
-#***************************************************************************************************************************************************
+# ***************************************************************************************************************************************************
 # !!!! the python "anchors_optim" function is meant to be used from the command line (from within a Python console it gives incorrect results)  !!!!
-#***************************************************************************************************************************************************
+# ***************************************************************************************************************************************************
 
 def anchors_optim(annotations,
-                  ratios = 3,
-                  scales = 3,
-                  objective = 'focal',
-                  popsize = 15,
-                  mutation = 0.5,
-                  image_min_side = 800,
-                  image_max_side = 1333,
-                  SIZES = [32, 64, 128, 256, 512],                            # default SIZES values
-                  STRIDES = [8, 16, 32, 64, 128],                             # default STRIDES values
-                  include_stride = False,
-                  resize = False,
-                  threads = 1,
-                  verbose = False,
-                  seed = None):
-    
+                  ratios=3,
+                  scales=3,
+                  objective='focal',
+                  popsize=15,
+                  mutation=0.5,
+                  image_min_side=800,
+                  image_max_side=1333,
+                  # default SIZES values
+                  SIZES=[32, 64, 128, 256, 512],
+                  # default STRIDES values
+                  STRIDES=[8, 16, 32, 64, 128],
+                  include_stride=False,
+                  resize=False,
+                  threads=1,
+                  verbose=False,
+                  seed=None):
+
     if ratios % 2 != 1:
         raise Exception('The number of ratios has to be odd.')
 
     entries = np.zeros((0, 4))
     max_x = 0
     max_y = 0
-    
+
     updating = 'immediate'
     if threads > 1:
-        updating = 'deferred'                                  # when the number of threads is > 1 then 'updating' is set to 'deferred' by default (see the documentation of "scipy.optimize.differential_evolution())
+        # when the number of threads is > 1 then 'updating' is set to
+        # 'deferred' by default (see the documentation of
+        # "scipy.optimize.differential_evolution())
+        updating = 'deferred'
 
     if seed is None:
         seed = np.random.RandomState()
     else:
         seed = np.random.RandomState(seed)
-        
 
     if verbose:
         print('Loading object dimensions.')
@@ -181,10 +197,11 @@ def anchors_optim(annotations,
             if not x1 or not y1 or not x2 or not y2:
                 continue
 
-            if resize:                
-                base_dir = os.path.split(annotations)[0]                # Concat base path from annotations file follow retinanet
+            if resize:
+                # Concat base path from annotations file follow retinanet
+                base_dir = os.path.split(annotations)[0]
                 relative_path = row[0]
-                image_path = os.path.join(base_dir,relative_path)
+                image_path = os.path.join(base_dir, relative_path)
                 img = Image.open(image_path)
 
                 if hasattr(img, "shape"):
@@ -192,7 +209,8 @@ def anchors_optim(annotations,
                 else:
                     image_shape = (img.size[0], img.size[1], 3)
 
-                scale = compute_resize_scale(image_shape, min_side=image_min_side, max_side=image_max_side)
+                scale = compute_resize_scale(
+                    image_shape, min_side=image_min_side, max_side=image_max_side)
                 x1, y1, x2, y2 = list(map(lambda x: int(x) * scale, row[1:5]))
 
             max_x = max(x2, max_x)
@@ -204,7 +222,8 @@ def anchors_optim(annotations,
             else:
                 width = x2 - x1
                 height = y2 - y1
-                entry = np.expand_dims(np.array([-width / 2, -height / 2, width / 2, height / 2]), axis=0)
+                entry = np.expand_dims(
+                    np.array([-width / 2, -height / 2, width / 2, height / 2]), axis=0)
                 entries = np.append(entries, entry, axis=0)
 
     image_shape = [max_y, max_x]
@@ -213,46 +232,50 @@ def anchors_optim(annotations,
         print('Optimising anchors.')
 
     bounds = []
-    # best_result = sys.maxsize
 
     for i in range(int((ratios - 1) / 2)):
         bounds.append((1, 4))
 
     for i in range(scales):
         bounds.append((0.4, 2))
-    
+
     update_state = None
     if threads == 1:
         update_state = state
-    
+
     ARGS = (entries,
             image_shape,
-            objective, 
-            ratios, 
+            objective,
+            ratios,
             include_stride,
             SIZES,
             STRIDES,
             verbose,
             update_state,
-            False,                   # return a single value ('to_tuple' parameter is set to False)
+            # return a single value ('to_tuple' parameter is set to False)
+            False,
             threads)
-        
-    result = scipy.optimize.differential_evolution(func = average_overlap,
-                                                   args = ARGS,                  # pass the *args as a tuple [ SEE:  https://stackoverflow.com/q/32302654  ]
-                                                   mutation = mutation,
-                                                   updating = updating,
-                                                   workers = threads,
-                                                   bounds = bounds, 
-                                                   popsize = popsize, 
-                                                   seed = seed)
 
-    #------------------------------------------------------------------------------------------------------ using the 'lambda' function gives an error because 'lambdas' are not pickleable and the 'workers' parameter requires that 'func' is pickleable [SEE: https://stackoverflow.com/questions/25348532/can-python-pickle-lambda-functions ]
-    # result = scipy.optimize.differential_evolution(func = lambda x: average_overlap(x, 
-    #                                                                                 entries, 
-    #                                                                                 state, 
+    result = scipy.optimize.differential_evolution(func=average_overlap,
+                                                   args=ARGS,
+                                                   # pass the *args as a tuple
+                                                   # [ SEE:
+                                                   # https://stackoverflow.com/q/32302654
+                                                   # ]
+                                                   mutation=mutation,
+                                                   updating=updating,
+                                                   workers=threads,
+                                                   bounds=bounds,
+                                                   popsize=popsize,
+                                                   seed=seed)
+
+    # ------------------------------------------------------------------------------------------------------ using the 'lambda' function gives an error because 'lambdas' are not pickleable and the 'workers' parameter requires that 'func' is pickleable [SEE: https://stackoverflow.com/questions/25348532/can-python-pickle-lambda-functions ]
+    # result = scipy.optimize.differential_evolution(func = lambda x: average_overlap(x,
+    #                                                                                 entries,
+    #                                                                                 state,
     #                                                                                 image_shape,
-    #                                                                                 args.objective, 
-    #                                                                                 args.ratios, 
+    #                                                                                 args.objective,
+    #                                                                                 args.ratios,
     #                                                                                 args.include_stride,
     #                                                                                 SIZES,
     #                                                                                 STRIDES,
@@ -260,10 +283,10 @@ def anchors_optim(annotations,
     #                                                mutation = args.mutation,
     #                                                updating = updating,
     #                                                workers = args.threads,
-    #                                                bounds = bounds, 
-    #                                                popsize = args.popsize, 
+    #                                                bounds = bounds,
+    #                                                popsize = args.popsize,
     #                                                seed = seed)
-    #------------------------------------------------------------------------------------------------------ 
+    # ------------------------------------------------------------------------------------------------------
 
     if hasattr(result, 'success') and result.success:
         print('Optimization ended successfully!')
@@ -274,43 +297,51 @@ def anchors_optim(annotations,
         print('Reason: {}'.format(result.message))
 
     values = result.x
-    anchor_params = calculate_config(values, 
+    anchor_params = calculate_config(values,
                                      ratios,
                                      SIZES,
                                      STRIDES)
-    
-    (avg, not_matched) = average_overlap(values, 
-                                         entries,                                          
+
+    (avg, not_matched) = average_overlap(values,
+                                         entries,
                                          image_shape,
-                                         'avg', 
-                                         ratios, 
+                                         'avg',
+                                         ratios,
                                          include_stride,
                                          SIZES,
                                          STRIDES,
                                          verbose,
-                                         {'best_result': 0},                        # pass a specific value to the 'set_state' parameter
-                                         True,                                      # return a 'tuple'  ('to_tuple' parameter is set to True)
-                                         1)                                         # set the 'threads' parameter to 1
-    
-    end_state = np.round(avg, 5)                                                    # as 'end_state' set the 'avg' value 
+                                         # pass a specific value to the
+                                         # 'set_state' parameter
+                                         {'best_result': 0},
+                                         # return a 'tuple'  ('to_tuple'
+                                         # parameter is set to True)
+                                         True,
+                                         # set the 'threads' parameter to 1
+                                         1)
+
+    # as 'end_state' set the 'avg' value
+    end_state = np.round(avg, 5)
     RATIOS_result = sorted(np.round(anchor_params.ratios, 3))
     SCALES_result = sorted(np.round(anchor_params.scales, 3))
-    
+
     print()
     print('Final best anchor configuration')
     print('State: {}'.format(end_state))
     print('Ratios: {}'.format(RATIOS_result))
     print('Scales: {}'.format(SCALES_result))
-    
-    dict_out = {'ratios': RATIOS_result, 'scales': SCALES_result, 'not_matched': not_matched, 'end_state': end_state}
-        
+
+    dict_out = {
+        'ratios': RATIOS_result,
+        'scales': SCALES_result,
+        'not_matched': not_matched,
+        'end_state': end_state}
+
     if include_stride:
         STRIDE = np.round(1 - avg, 3)
         print('Average overlap: {}'.format(STRIDE))
         dict_out['stride'] = STRIDE
 
     print("Number of labels that don't have any matching anchor: {}".format(not_matched))
-        
+
     return dict_out
-
-
