@@ -1,7 +1,6 @@
 
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
-# warnings.simplefilter("ignore")
 import csv
 import os
 import sys
@@ -146,27 +145,28 @@ def average_overlap(values,
         return result
 
 
-# ***************************************************************************************************************************************************
-# !!!! the python "anchors_optim" function is meant to be used from the command line (from within a Python console it gives incorrect results)  !!!!
-# ***************************************************************************************************************************************************
 
-def anchors_optim(annotations,
-                  ratios=3,
-                  scales=3,
-                  objective='focal',
-                  popsize=15,
-                  mutation=0.5,
-                  image_min_side=800,
-                  image_max_side=1333,
-                  # default SIZES values
-                  SIZES=[32, 64, 128, 256, 512],
-                  # default STRIDES values
-                  STRIDES=[8, 16, 32, 64, 128],
-                  include_stride=False,
-                  resize=False,
-                  threads=1,
-                  verbose=False,
-                  seed=None):
+def anchors_optimize(annotations,
+                     ratios=3,
+                     scales=3,
+                     objective='focal',
+                     popsize=15,
+                     mutation=0.5,
+                     image_min_side=800,
+                     image_max_side=1333,
+                     # default SIZES values
+                     SIZES=[32, 64, 128, 256, 512],
+                     # default STRIDES values
+                     STRIDES=[8, 16, 32, 64, 128],
+                     include_stride=False,
+                     resize=False,
+                     threads=1,
+                     verbose=False,
+                     seed=None):
+    
+    """
+    Important Note: The python "anchors_optimize" function is meant to be used from the command line (from within a Python console it gives incorrect results)    
+    """
 
     if ratios % 2 != 1:
         raise Exception('The number of ratios has to be odd.')
@@ -177,9 +177,7 @@ def anchors_optim(annotations,
 
     updating = 'immediate'
     if threads > 1:
-        # when the number of threads is > 1 then 'updating' is set to
-        # 'deferred' by default (see the documentation of
-        # "scipy.optimize.differential_evolution())
+        # when the number of threads is > 1 then 'updating' is set to 'deferred' by default (see the documentation of "scipy.optimize.differential_evolution())
         updating = 'deferred'
 
     if seed is None:
@@ -257,36 +255,14 @@ def anchors_optim(annotations,
             threads)
 
     result = scipy.optimize.differential_evolution(func=average_overlap,
+                                                   # pass the '*args' as a tuple (see: https://stackoverflow.com/q/32302654)
                                                    args=ARGS,
-                                                   # pass the *args as a tuple
-                                                   # [ SEE:
-                                                   # https://stackoverflow.com/q/32302654
-                                                   # ]
                                                    mutation=mutation,
                                                    updating=updating,
                                                    workers=threads,
                                                    bounds=bounds,
                                                    popsize=popsize,
                                                    seed=seed)
-
-    # ------------------------------------------------------------------------------------------------------ using the 'lambda' function gives an error because 'lambdas' are not pickleable and the 'workers' parameter requires that 'func' is pickleable [SEE: https://stackoverflow.com/questions/25348532/can-python-pickle-lambda-functions ]
-    # result = scipy.optimize.differential_evolution(func = lambda x: average_overlap(x,
-    #                                                                                 entries,
-    #                                                                                 state,
-    #                                                                                 image_shape,
-    #                                                                                 args.objective,
-    #                                                                                 args.ratios,
-    #                                                                                 args.include_stride,
-    #                                                                                 SIZES,
-    #                                                                                 STRIDES,
-    #                                                                                 args.verbose)[0],
-    #                                                mutation = args.mutation,
-    #                                                updating = updating,
-    #                                                workers = args.threads,
-    #                                                bounds = bounds,
-    #                                                popsize = args.popsize,
-    #                                                seed = seed)
-    # ------------------------------------------------------------------------------------------------------
 
     if hasattr(result, 'success') and result.success:
         print('Optimization ended successfully!')
@@ -311,11 +287,9 @@ def anchors_optim(annotations,
                                          SIZES,
                                          STRIDES,
                                          verbose,
-                                         # pass a specific value to the
-                                         # 'set_state' parameter
+                                         # pass a specific value to the 'set_state' parameter
                                          {'best_result': 0},
-                                         # return a 'tuple'  ('to_tuple'
-                                         # parameter is set to True)
+                                         # return a 'tuple'  ('to_tuple' parameter is set to True)
                                          True,
                                          # set the 'threads' parameter to 1
                                          1)

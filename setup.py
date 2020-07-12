@@ -74,7 +74,7 @@ setuptools.setup(
     install_requires=install_deps,
     entry_points={
         'console_scripts': [
-            'anchor-optim=anchor_optimization.optimize_anchors_argparse:main',
+            'anchor-optimization=anchor_optimization.optimize_anchors_argparse:main',
         ],
     },
     ext_modules=extensions,

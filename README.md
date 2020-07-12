@@ -8,15 +8,15 @@ For questions and discussion join the [Keras Slack](https://keras-slack-autojoin
 ## Setup
 
 1. Clone this repository
-2. `pip install .`
-3. `python setup.py build_ext --inplace`
+1. `pip install .`
+1. `python setup.py build_ext --inplace`
 
 ## Usage
 
 Basic usage:
 
 1. Define your own dataset in a csv format, for more information follow the guide in [keras-retinanet](https://github.com/fizyr/keras-retinanet#csv-datasets).
-2. Run `anchor-optim PATH_TO_CSV` 
+1. Run `anchor-optimization PATH_TO_CSV` 
 
 Additional options:
 
@@ -29,7 +29,7 @@ Additional options:
 
 To reproduce our results:
 
-`anchor-optim PATH_TO_CSV --ratios=5 --no-resize`
+`anchor-optimization PATH_TO_CSV --ratios=5 --no-resize`
 
 ### Notes 
 

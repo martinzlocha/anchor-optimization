@@ -1,8 +1,7 @@
 
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
-# warnings.simplefilter("ignore")
-from .optimize_anchors import anchors_optim
+from .optimize_anchors import anchors_optimize
 import argparse
 import sys
 
@@ -104,23 +103,23 @@ def main(args=None):
     if args.seed:
         seed = args.seed
 
-    res_argp = anchors_optim(annotations=args.annotations,
-                             ratios=args.ratios,
-                             scales=args.scales,
-                             objective=args.objective,
-                             popsize=args.popsize,
-                             mutation=args.mutation,
-                             image_min_side=args.image_min_side,
-                             image_max_side=args.image_max_side,
-                             # default SIZES values based on keras-retinanet
-                             SIZES=[32, 64, 128, 256, 512],
-                             # default STRIDES values based on keras-retinanet
-                             STRIDES=[8, 16, 32, 64, 128],
-                             include_stride=include_stride,
-                             resize=resize,
-                             threads=args.threads,
-                             verbose=verbose,
-                             seed=seed)
+    res_argp = anchors_optimize(annotations=args.annotations,
+                                ratios=args.ratios,
+                                scales=args.scales,
+                                objective=args.objective,
+                                popsize=args.popsize,
+                                mutation=args.mutation,
+                                image_min_side=args.image_min_side,
+                                image_max_side=args.image_max_side,
+                                # default SIZES values based on keras-retinanet
+                                SIZES=[32, 64, 128, 256, 512],
+                                # default STRIDES values based on keras-retinanet
+                                STRIDES=[8, 16, 32, 64, 128],
+                                include_stride=include_stride,
+                                resize=resize,
+                                threads=args.threads,
+                                verbose=verbose,
+                                seed=seed)
 
 
 if __name__ == '__main__':
