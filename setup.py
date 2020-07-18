@@ -1,6 +1,25 @@
 import setuptools
 from setuptools.extension import Extension
 from distutils.command.build_ext import build_ext as DistUtilsBuildExt
+from pkg_resources import DistributionNotFound, get_distribution
+
+
+def get_dist(pkgname):
+    try:
+        return get_distribution(pkgname)
+    except DistributionNotFound:
+        return None
+
+
+install_deps = ['keras_retinanet==0.5.1',
+                'numpy',
+                'scipy>=1.2.0',
+                'cython']
+
+
+# install 'tensorflow' ('cpu' or 'gpu') if it doesn't exist (see: https://stackoverflow.com/a/49338206/8302386)
+if get_dist('tensorflow>=1.14.0') is None and get_dist('tensorflow-gpu>=1.14.0') is None:
+    install_deps.append('tensorflow')
 
 
 class BuildExtension(setuptools.Command):
@@ -36,8 +55,8 @@ class BuildExtension(setuptools.Command):
 
 extensions = [
     Extension(
-        'compute_overlap',
-        ['compute_overlap.pyx']
+        'anchor_optimization.utils.compute_overlap',
+        ['anchor_optimization/utils/compute_overlap.pyx']
     ),
 ]
 
@@ -52,7 +71,12 @@ setuptools.setup(
     maintainer_email='zlocha.martin@gmail.com',
     cmdclass={'build_ext': BuildExtension},
     packages=setuptools.find_packages(),
-    install_requires=['keras_retinanet==0.5.1', 'numpy', 'scipy', 'cython', 'tensorflow'],
+    install_requires=install_deps,
+    entry_points={
+        'console_scripts': [
+            'anchor-optimization=anchor_optimization.optimize_anchors_argparse:main',
+        ],
+    },
     ext_modules=extensions,
     setup_requires=["cython>=0.28", "numpy>=1.14.0"]
 )

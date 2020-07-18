@@ -16,7 +16,7 @@ For questions and discussion join the [Keras Slack](https://keras-slack-autojoin
 Basic usage:
 
 1. Define your own dataset in a csv format, for more information follow the guide in [keras-retinanet](https://github.com/fizyr/keras-retinanet#csv-datasets).
-1. Run `python optimize_anchors.py PATH_TO_CSV` 
+1. Run `anchor-optimization PATH_TO_CSV` 
 
 Additional options:
 
@@ -25,10 +25,11 @@ Additional options:
 - `popsize` parameter allows you to specify the population multiplier used by differential evolution. Higher values result in better results however the computation will also be slower.
 - By default the images and the detected objects are resized using the same method as in keras-retinanet implementation. If you do not wish to resize the image use the `no-resize` flag or specify different `image-min-side` and `image-max-side`.
 - By default we ignore strides when optimizing the anchor configuration, this makes it feasible to optimize the anchors for a large number of objects in a short time. We have recently added an `include-stride` flag. This makes the computation much slower however it is more accurate. We suggest you only use it if your dataset is small.
+- `threads` to allow parallelization.
 
 To reproduce our results:
 
-`python optimize_anchors.py PATH_TO_CSV --ratios=5 --no-resize`
+`anchor-optimization PATH_TO_CSV --ratios=5 --no-resize`
 
 ### Notes 
 
